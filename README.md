@@ -26,9 +26,10 @@
 
 <p>
 <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest"><img src="https://img.shields.io/badge/⬇%20Download%20for-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" /></a>
+<a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest"><img src="https://img.shields.io/badge/⬇%20Download%20for-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux" /></a>
 </p>
 
-<sub>🪟 **Windows installer available now** · 🐧 Linux and  Apple builds coming soon</sub>
+<sub>🪟 **Windows installer** & 🐧 **Linux AppImage** available now · 🍎 macOS build coming soon</sub>
 
 </div>
 
@@ -289,9 +290,10 @@ The desktop app **Rizzo PII** (Tauri / WebView2) launches the Python/Flask backe
 "sidecar" plus a per-user Windows installer; a CPU-only PyTorch build keeps it fully **offline**.
 Packaging instructions in **[docs/BUILD.md](docs/BUILD.md)**.
 
-> **⬇️ Download.** Grab the ready-to-use **Windows installer** from the
-> **[Releases page](https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest)** — double-click
-> to install, no Python or setup required. **Linux and macOS builds are coming soon.**
+> **⬇️ Download.** Grab the ready-to-use build from the
+> **[Releases page](https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest)** — no Python or
+> setup required: a **Windows installer** (double-click) and a **Linux AppImage** (`chmod +x` then
+> run) are available now. **macOS build coming soon.**
 
 ---
 
