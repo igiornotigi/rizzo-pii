@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>rizzo-pii — Anonimizzazione PII locale e reversibile</title>
+<meta name="description" content="rizzo-pii: anonimizzazione PII locale, reversibile, per testi legali italiani. Usa i modelli frontier senza cedere i tuoi dati. 100% locale, GDPR by design." />
+<meta property="og:title" content="rizzo-pii — Local, reversible PII anonymization" />
+<meta property="og:description" content="Use frontier models without giving up your data. 100% local, GDPR by design, Italian-legal coverage (CF / PIVA / catasto)." />
+<meta property="og:image" content="assets/mascot_shield.png" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="assets/mascot_shield.png" />
+<style>
+  :root{
+    --violet:#7c3aed; --violet-d:#6d28d9; --violet-l:#a78bfa;
+    --ink:#1a1530; --ink-2:#2a2342; --muted:#6b6480;
+    --bg:#faf9ff; --card:#ffffff; --line:#eae6f7;
+    --green:#16a34a; --radius:16px;
+    --shadow:0 10px 40px rgba(124,58,237,.10);
+    --shadow-sm:0 4px 16px rgba(124,58,237,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---- i18n toggle ---- */
+  body.lang-it .en{display:none}
+  body.lang-en .it{display:none}
+  a{color:var(--violet);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  section{padding:72px 0}
+  h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-.02em;margin-bottom:8px;text-align:center}
+  .sub{color:var(--muted);text-align:center;max-width:620px;margin:0 auto 40px;font-size:1.05rem}
+
+  /* ---- nav ---- */
+  nav{
+    position:sticky;top:0;z-index:50;background:rgba(250,249,255,.85);
+    backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);
+  }
+  .nav-in{display:flex;align-items:center;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:-.02em}
+  .brand img{width:34px;height:34px}
+  .nav-sp{flex:1}
+  .nav-links{display:flex;gap:22px;font-size:.95rem;font-weight:600;color:var(--ink-2)}
+  .nav-links a{color:var(--ink-2)}
+  .nav-links a:hover{color:var(--violet);text-decoration:none}
+  .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-size:.8rem;font-weight:700;background:var(--card)}
+  .lang button{border:0;background:transparent;padding:6px 12px;cursor:pointer;color:var(--muted);font-weight:700}
+  body.lang-it .lang .it-btn,body.lang-en .lang .en-btn{background:var(--violet);color:#fff}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---- hero ---- */
+  .hero{text-align:center;padding:72px 0 56px;position:relative;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(60% 80% at 50% 0%,rgba(167,139,250,.22),transparent 70%);
+  }
+  .hero img.mascot{width:140px;height:140px;filter:drop-shadow(0 12px 24px rgba(124,58,237,.25));}
+  .hero h1{font-size:clamp(2.6rem,6vw,4rem);font-weight:900;letter-spacing:-.03em;margin:14px 0 6px}
+  .hero h1 .dot{color:var(--violet)}
+  .tagline{font-size:clamp(1.1rem,2.4vw,1.45rem);font-weight:700;color:var(--ink-2);margin-bottom:6px}
+  .lede{color:var(--muted);max-width:620px;margin:10px auto 0;font-size:1.05rem}
+  .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:24px 0 8px}
+  .badge{font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:6px 12px;border-radius:999px;background:#f0ebff;color:var(--violet-d);border:1px solid #e3d9ff}
+  .stats{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin:30px 0 4px}
+  .stat b{display:block;font-size:1.7rem;font-weight:900;color:var(--violet);line-height:1.1}
+  .stat span{font-size:.8rem;color:var(--muted);font-weight:600}
+
+  /* ---- buttons ---- */
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:30px 0 10px}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:.98rem;
+    padding:13px 22px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:.15s;
+  }
+  .btn:hover{text-decoration:none;transform:translateY(-1px)}
+  .btn-primary{background:var(--violet);color:#fff;box-shadow:var(--shadow-sm)}
+  .btn-primary:hover{background:var(--violet-d)}
+  .btn-ghost{background:var(--card);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .btn svg{width:18px;height:18px;fill:currentColor}
+  .small{font-size:.85rem;color:var(--muted);margin-top:6px}
+
+  /* ---- download cards ---- */
+  .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
+  @media(max-width:760px){.dl-grid{grid-template-columns:1fr}}
+  .dl{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 22px;text-align:center;box-shadow:var(--shadow-sm);transition:.18s;
+  }
+  .dl:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .dl .os{font-size:2rem;margin-bottom:6px}
+  .dl h3{font-size:1.15rem;font-weight:800;margin-bottom:2px}
+  .dl p{font-size:.85rem;color:var(--muted);min-height:34px}
+  .dl .btn{margin-top:12px;width:100%;justify-content:center}
+
+  /* ---- how it works ---- */
+  .how{background:linear-gradient(180deg,#fff,#faf9ff)}
+  .how img{width:100%;max-width:860px;display:block;margin:0 auto 36px;border-radius:var(--radius)}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:760px){.steps{grid-template-columns:1fr 1fr}}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center}
+  .step .n{width:34px;height:34px;border-radius:999px;background:var(--violet);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+  .step h4{font-size:1rem;margin-bottom:4px}
+  .step p{font-size:.85rem;color:var(--muted)}
+
+  /* ---- features ---- */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:760px){.feat-grid{grid-template-columns:1fr}}
+  .feat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm)}
+  .feat .ic{font-size:1.6rem;margin-bottom:10px}
+  .feat h3{font-size:1.1rem;font-weight:800;margin-bottom:6px}
+  .feat p{font-size:.92rem;color:var(--muted)}
+
+  /* ---- comparison ---- */
+  .cmp{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);font-size:.92rem}
+  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:var(--ink);color:#fff;font-weight:700}
+  th.hl{background:var(--violet)}
+  td.hl{background:#f6f2ff;font-weight:700}
+  tr:last-child td{border-bottom:0}
+  .yes{color:var(--green);font-weight:800}
+  .no{color:#c0392b;font-weight:700}
+
+  /* ---- example ---- */
+  .ex{background:var(--ink);color:#eee;border-radius:var(--radius);padding:26px;font-size:.95rem;box-shadow:var(--shadow)}
+  .ex .ph{color:var(--violet-l);font-weight:800}
+  .ex .row{margin:8px 0}
+  .ex .lbl{color:#9b94b3;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+
+  /* ---- footer ---- */
+  footer{background:var(--ink);color:#c9c3dd;padding:48px 0;text-align:center}
+  footer img{width:90px;margin-bottom:14px}
+  footer a{color:var(--violet-l)}
+  footer .flinks{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:14px 0;font-weight:600}
+  footer .made{font-size:.85rem;color:#8b84a3;margin-top:14px}
+</style>
+</head>
+<body class="lang-it">
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><img src="assets/mascot_shield.png" alt="rizzo-pii" /> rizzo-pii</div>
+    <div class="nav-sp"></div>
+    <div class="nav-links">
+      <a href="#download"><span class="it">Download</span><span class="en">Download</span></a>
+      <a href="#how"><span class="it">Come funziona</span><span class="en">How it works</span></a>
+      <a href="#features"><span class="it">Caratteristiche</span><span class="en">Features</span></a>
+      <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div class="lang" role="group" aria-label="language">
+      <button class="it-btn" onclick="setLang('it')">IT</button>
+      <button class="en-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <img class="mascot" src="assets/mascot_shield.png" alt="rizzo-pii hedgehog mascot" />
+    <h1>rizzo<span class="dot">-</span>pii</h1>
+    <div class="tagline">
+      <span class="it">Anonimizzazione PII locale e reversibile per testi legali italiani</span>
+      <span class="en">Local, reversible PII anonymization for Italian legal text</span>
+    </div>
+    <p class="lede">
+      <span class="it"><b>Usa i modelli frontier senza cedere i tuoi dati.</b> Anonimizza i documenti in locale, manda al cloud solo segnaposto, ricostruisci la risposta in locale. Il dato sensibile non lascia mai il tuo computer.</span>
+      <span class="en"><b>Use frontier models without giving up your data.</b> Anonymize documents locally, send only placeholders to the cloud, restore the answer locally. Sensitive data never leaves your machine.</span>
+    </p>
+
+    <div class="badges">
+      <span class="badge">100% LOCAL</span>
+      <span class="badge">GDPR BY DESIGN</span>
+      <span class="badge">EU AI ACT ALIGNED</span>
+      <span class="badge">OFFLINE · NO API KEY</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>≈0.3B</b><span class="it">parametri</span><span class="en">parameters</span></div>
+      <div class="stat"><b>~0.5 GB</b><span>RAM · CPU</span></div>
+      <div class="stat"><b>22</b><span class="it">categorie PII</span><span class="en">PII categories</span></div>
+      <div class="stat"><b>0.989</b><span class="it">micro-F1 (val. reale IT)</span><span class="en">micro-F1 (real IT val.)</span></div>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="#download">
+        <svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>
+        <span class="it">Scarica l'app</span><span class="en">Download the app</span>
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/Rizzo-AI-Academy/rizzo-pii" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+        GitHub
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/Rizzo-AI-Academy/rizzo-pii/blob/main/report/rizzo-pii-report.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16z"/></svg>
+        <span class="it">Report tecnico</span><span class="en">Technical report</span>
+      </a>
+    </div>
+    <p class="small">
+      <span class="it">Open source · MIT · nessuna telemetria</span>
+      <span class="en">Open source · MIT · no telemetry</span>
+    </p>
+  </div>
+</header>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="wrap">
+    <h2><span class="it">Scarica l'app desktop</span><span class="en">Download the desktop app</span></h2>
+    <p class="sub">
+      <span class="it">Pronta all'uso, 100% offline su CPU. Niente Python, niente setup, niente chiavi API.</span>
+      <span class="en">Ready to use, 100% offline on CPU. No Python, no setup, no API keys.</span>
+    </p>
+    <div class="dl-grid">
+      <div class="dl">
+        <div class="os">🪟</div>
+        <h3>Windows</h3>
+        <p><span class="it">Installer per-utente (.exe), niente admin.</span><span class="en">Per-user installer (.exe), no admin.</span></p>
+        <a class="btn btn-primary" href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest/download/Rizzo-PII-1.0.0-Windows-Setup.exe">
+          <span class="it">Scarica .exe</span><span class="en">Download .exe</span>
+        </a>
+      </div>
+      <div class="dl">
+        <div class="os">🍎</div>
+        <h3>macOS</h3>
+        <p><span class="it">Apple Silicon (arm64). App non firmata: tasto destro → Apri.</span><span class="en">Apple Silicon (arm64). Unsigned: right-click → Open.</span></p>
+        <a class="btn btn-primary" href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest/download/Rizzo-PII-1.0.0-macOS-arm64.dmg">
+          <span class="it">Scarica .dmg</span><span class="en">Download .dmg</span>
+        </a>
+      </div>
+      <div class="dl">
+        <div class="os">🐧</div>
+        <h3>Linux</h3>
+        <p><span class="it">AppImage portabile (chmod +x ed esegui).</span><span class="en">Portable AppImage (chmod +x then run).</span></p>
+        <a class="btn btn-primary" href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest/download/Rizzo-PII-1.0.0-Linux-x86_64.AppImage">
+          <span class="it">Scarica AppImage</span><span class="en">Download AppImage</span>
+        </a>
+      </div>
+    </div>
+    <p class="small" style="text-align:center;margin-top:18px">
+      <span class="it">Per sviluppatori: <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest">pesi del modello e tutte le release</a>.</span>
+      <span class="en">For developers: <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest">model weights and all releases</a>.</span>
+    </p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how">
+  <div class="wrap">
+    <h2><span class="it">Come funziona</span><span class="en">How it works</span></h2>
+    <p class="sub">
+      <span class="it">Tre passi in locale, uno solo nel cloud. Al cloud arrivano solo segnaposto.</span>
+      <span class="en">Three local steps, one remote. The cloud only ever sees placeholders.</span>
+    </p>
+    <img src="assets/schema_explainable.png" alt="rizzo-pii workflow: tutto in locale su CPU, solo i segnaposto vanno al cloud" />
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h4>🔒 <span class="it">Anonimizza</span><span class="en">Anonymize</span></h4><p><span class="it">Il modello tagga ogni PII in locale.</span><span class="en">The model tags every PII locally.</span></p></div>
+      <div class="step"><div class="n">2</div><h4>🏷️ <span class="it">Segnaposto</span><span class="en">Placeholder</span></h4><p><span class="it">Ogni dato → <code>[FULLNAME_1]</code> + dizionario locale.</span><span class="en">Each value → <code>[FULLNAME_1]</code> + local dictionary.</span></p></div>
+      <div class="step"><div class="n">3</div><h4>☁️ <span class="it">LLM frontier</span><span class="en">Frontier LLM</span></h4><p><span class="it">Invii solo il testo anonimizzato.</span><span class="en">You send only the anonymized text.</span></p></div>
+      <div class="step"><div class="n">4</div><h4>🔓 <span class="it">Ripristina</span><span class="en">Restore</span></h4><p><span class="it">I valori veri tornano in locale.</span><span class="en">Real values restored locally.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLE -->
+<section>
+  <div class="wrap">
+    <h2><span class="it">Un esempio concreto</span><span class="en">A concrete example</span></h2>
+    <p class="sub"><span class="it">I tre identificatori più sensibili — codice fiscale, partita IVA, dati catastali — che i modelli generici inglesi lasciano in chiaro.</span><span class="en">The three most sensitive identifiers — fiscal code, VAT number, cadastral data — that generic English-first models leave in the clear.</span></p>
+    <div class="ex">
+      <div class="row"><span class="lbl"><span class="it">Originale</span><span class="en">Original</span></span><br>Il Sig. Mario Rossi, C.F. RSSMRA85H12F205Z, P.IVA 12345678901, è titolare dell'immobile al Foglio 12, particella 345, sub. 6.</div>
+      <div class="row"><span class="lbl"><span class="it">Anonimizzato</span><span class="en">Anonymized</span></span><br>Il Sig. <span class="ph">[FULLNAME_1]</span>, C.F. <span class="ph">[CF_1]</span>, P.IVA <span class="ph">[PIVA_1]</span>, è titolare dell'immobile al <span class="ph">[CATASTO_1]</span>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <h2><span class="it">Privacy davvero privata</span><span class="en">Privacy that is actually private</span></h2>
+    <p class="sub"><span class="it">Non "l'ennesimo rilevatore di PII": un'architettura per usare modelli potenti senza cedere i dati.</span><span class="en">Not "yet another PII detector": an architecture for using powerful models without surrendering data.</span></p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ic">🔒</div><h3><span class="it">Il dato non esce</span><span class="en">Data never leaves</span></h3><p><span class="it">Detection e ripristino girano in locale su CPU. Nessuna chiave API, nessuna telemetria.</span><span class="en">Detection and restore run locally on CPU. No API key, no telemetry.</span></p></div>
+      <div class="feat"><div class="ic">⚖️</div><h3><span class="it">GDPR by design</span><span class="en">GDPR by design</span></h3><p><span class="it">Minimizzazione dei dati (Art. 5): il terzo vede solo testo pseudonimizzato.</span><span class="en">Data minimization (Art. 5): the third party only ever sees pseudonymized text.</span></p></div>
+      <div class="feat"><div class="ic">🔄</div><h3><span class="it">Reversibile</span><span class="en">Reversible</span></h3><p><span class="it">Non distrugge: pseudonimizza. La risposta dell'LLM torna coi valori veri.</span><span class="en">Not destructive: it pseudonymizes. The LLM answer is restored with real values.</span></p></div>
+      <div class="feat"><div class="ic">🇮🇹</div><h3><span class="it">Copertura legale IT</span><span class="en">Italian-legal coverage</span></h3><p><span class="it">Codice fiscale, partita IVA, dati catastali: identificatori che nessun altro modello open copre.</span><span class="en">Fiscal code, VAT number, cadastral data: identifiers no other open model covers.</span></p></div>
+      <div class="feat"><div class="ic">✓</div><h3><span class="it">Rete a checksum</span><span class="en">Checksum safety net</span></h3><p><span class="it">IBAN/CF/PIVA/carte validati matematicamente (mod-97 / Luhn): il checksum batte il modello.</span><span class="en">IBAN/CF/PIVA/cards validated mathematically (mod-97 / Luhn): checksum overrides the model.</span></p></div>
+      <div class="feat"><div class="ic">💻</div><h3><span class="it">Su un PC normale</span><span class="en">On a normal computer</span></h3><p><span class="it">≈0.3B parametri, &lt;1 GB di RAM, nessuna GPU. Basta il portatile che hai già.</span><span class="en">≈0.3B params, &lt;1 GB RAM, no GPU. The laptop you already own is enough.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="how">
+  <div class="wrap">
+    <h2><span class="it">Come si confronta</span><span class="en">How it compares</span></h2>
+    <p class="sub"><span class="it">I punti di forza: copertura legale italiana, footprint piccolo, rete a checksum.</span><span class="en">The differentiators: Italian-legal coverage, small footprint, checksum net.</span></p>
+    <div class="cmp">
+      <table>
+        <tr>
+          <th></th>
+          <th class="hl">rizzo-pii:0.3B</th>
+          <th>OpenAI Privacy Filter</th>
+          <th>MS Presidio</th>
+        </tr>
+        <tr><td><span class="it">Parametri</span><span class="en">Parameters</span></td><td class="hl">≈0.3B dense</td><td>1.5B / ≈50M active</td><td>spaCy + rules</td></tr>
+        <tr><td><span class="it">Gira su</span><span class="en">Runs on</span></td><td class="hl">CPU, &lt;1 GB RAM</td><td>On-device</td><td>CPU</td></tr>
+        <tr><td><span class="it">Categorie</span><span class="en">Categories</span></td><td class="hl">22 (incl. IT-legal)</td><td>8 generic</td><td>EN defaults</td></tr>
+        <tr><td>CF / PIVA / catasto</td><td class="hl"><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+        <tr><td><span class="it">Lingua primaria</span><span class="en">Primary language</span></td><td class="hl"><span class="it">Italiano (+7)</span><span class="en">Italian (+7)</span></td><td>English</td><td>English</td></tr>
+        <tr><td><span class="it">Validazione checksum</span><span class="en">Checksum validation</span></td><td class="hl"><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="it">parziale</span><span class="en">some</span></td></tr>
+        <tr><td><span class="it">Mapping reversibile</span><span class="en">Reversible mapping</span></td><td class="hl"><span class="yes">✓</span></td><td><span class="it">masking</span><span class="en">masking</span></td><td><span class="it">anonimizz.</span><span class="en">anonymization</span></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <img src="assets/mascot_eu_hat.png" alt="rizzo-pii mascot" />
+    <div class="flinks">
+      <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest">Download</a>
+      <a href="https://github.com/Rizzo-AI-Academy/rizzo-pii/blob/main/report/rizzo-pii-report.pdf" target="_blank" rel="noopener"><span class="it">Report</span><span class="en">Report</span></a>
+      <a href="https://huggingface.co/datasets/rizzoaiacademy/anonimizzazione-testi-italiano" target="_blank" rel="noopener">Dataset</a>
+    </div>
+    <p>
+      <span class="it">Rilasciato con licenza <b>MIT</b> © 2026 Simone Rizzo — Rizzo AI Academy.</span>
+      <span class="en">Released under the <b>MIT License</b> © 2026 Simone Rizzo — Rizzo AI Academy.</span>
+    </p>
+    <p class="made">🦔 <span class="it">La mascotte, un riccio, custodisce il documento e <b>resta dentro l'UE</b>. Costruito e addestrato in Italia.</span><span class="en">The hedgehog mascot guards the document and <b>stays inside the EU</b>. Built and trained in Italy.</span> 🇮🇹🇪🇺</p>
+  </div>
+</footer>
+
+<script>
+  function setLang(l){
+    document.body.classList.remove('lang-it','lang-en');
+    document.body.classList.add('lang-'+l);
+    document.documentElement.lang=l;
+    try{localStorage.setItem('rizzo_lang',l)}catch(e){}
+  }
+  (function(){
+    var saved;try{saved=localStorage.getItem('rizzo_lang')}catch(e){}
+    var l=saved||((navigator.language||'it').toLowerCase().startsWith('it')?'it':'en');
+    setLang(l);
+  })();
+</script>
+</body>
+</html>
