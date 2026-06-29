@@ -1,5 +1,6 @@
 # ─── Secrets ─── (NEVER commit)
 .env
+.env.notarize
 
 # ─── Trained models ─── (heavy, regenerable from training; distributed via HF / GitHub Releases)
 models/
