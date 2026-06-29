@@ -43,6 +43,9 @@
         "installMode": "currentUser",
         "languages": ["Italian"]
       }
+    },
+    "macOS": {
+      "signingIdentity": "-"
     }
   }
 }

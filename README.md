@@ -294,8 +294,11 @@ Packaging instructions in **[docs/BUILD.md](docs/BUILD.md)**.
 > **⬇️ Download.** Grab the ready-to-use build from the
 > **[Releases page](https://github.com/Rizzo-AI-Academy/rizzo-pii/releases/latest)** — no Python or
 > setup required: a **Windows installer** (double-click), a **macOS `.dmg`** (Apple Silicon /
-> arm64 — unsigned, so right-click → Open on first launch), and a **Linux AppImage** (`chmod +x`
-> then run) are all available now.
+> arm64 — ad-hoc signed but not notarized, so on first launch **right-click the app → Open**), and a
+> **Linux AppImage** (`chmod +x` then run) are all available now.
+>
+> <sub>macOS: if you ever see *"is damaged and can't be opened"*, clear the download quarantine with
+> `xattr -dr com.apple.quarantine "/Applications/Rizzo PII.app"`.</sub>
 
 ---
 
