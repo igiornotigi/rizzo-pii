@@ -363,40 +363,92 @@ BRAND_WORDS = ["Tecnova", "Inforge", "Logitalia", "Edilmax", "Aurea", "Novamed",
                "Demetra", "Kairos", "Helios", "Sinergia", "Zenit", "Klimex", "Optima",
                "Nordest Servizi", "Cantieri del Sud", "Gruppo Vesuvio"]
 
-LEGAL_FORMS = ["S.r.l.", "S.p.A.", "S.n.c.", "S.a.s.", "S.r.l.s.", "Soc. Coop.",
-               "S.c.a.r.l.", "& C. S.a.s."]
-FOREIGN_FORMS = ["Ltd", "GmbH", "S.A.", "B.V.", "Group", "International", "Italia S.p.A."]
+# forme societarie ITALIANE (forma canonica; la variazione di case/punti e' applicata
+# da _vary_form -> il modello vede srl/SRL/Srl/S.r.l. e non solo una grafia)
+IT_LEGAL_FORMS = ["S.r.l.", "S.p.A.", "S.n.c.", "S.a.s.", "S.r.l.s.", "Soc. Coop.",
+                  "S.c.a.r.l.", "& C. S.a.s.", "S.s.", "S.a.p.a."]
+# forme societarie INTERNAZIONALI (UE + extra-UE): l'ORG non e' solo italiana
+INTL_LEGAL_FORMS = [
+    "Ltd", "Ltd.", "Limited", "LLC", "L.L.C.", "Inc.", "Corp.", "Co.", "PLC", "plc",
+    "LLP", "GmbH", "gGmbH", "mbH", "AG", "UG", "KG", "OHG", "e.V.",          # DE
+    "S.A.", "S.L.", "S.L.U.", "S.A.U.", "S.Coop.", "S.C.",                   # ES
+    "SARL", "S.à r.l.", "SAS", "S.A.S.", "SASU", "SCI", "EURL", "SNC",       # FR
+    "B.V.", "N.V.", "V.O.F.", "C.V.",                                       # NL/BE
+    "Oy", "Oyj", "Ab", "AB", "AS", "ASA", "A/S", "ApS", "Ae", "ehf.",        # Nordics/IS
+    "Sp. z o.o.", "S.A.", "S.K.A.",                                          # PL
+    "d.o.o.", "d.d.", "s.r.o.", "a.s.", "Kft.", "Zrt.", "Bt.",              # CEE
+    "Lda.", "Unipessoal Lda.", "S.A. de C.V.", "S. de R.L.",                # PT/MX
+    "Pty Ltd", "Pte. Ltd.", "Sdn. Bhd.", "K.K.", "Co., Ltd.",              # AU/SG/MY/JP
+]
+ALL_LEGAL_FORMS = IT_LEGAL_FORMS + INTL_LEGAL_FORMS
 ORG_KINDS = ["Cooperativa", "Societa' Cooperativa", "Consorzio", "Fondazione",
-             "Associazione", "Onlus", "Ente"]
+             "Associazione", "Onlus", "Ente", "Holding", "Gruppo", "Studio Associato"]
+# stem internazionali, per ragioni sociali non italiane
+INTL_STEMS = ["Global", "Euro", "Trans", "Inter", "Pan", "Nordic", "Atlantic",
+              "Pacific", "Continental", "Iberica", "Hellenic", "Baltic", "Alpine",
+              "Danube", "Rhein", "Thames", "Cyber", "Quantum", "Vertex", "Apex",
+              "Summit", "Pioneer", "Horizon", "Catalyst", "Synergy", "Meridian"]
+INTL_TAILS = ["Tech", "Group", "Holdings", "Industries", "Partners", "Solutions",
+              "Systems", "Logistics", "Trading", "Capital", "Ventures", "Energy",
+              "Pharma", "Foods", "Motors", "Steel", "Media", "Consulting", "Labs",
+              "Networks", "Mobility", "Robotics", "Biotech", "Aerospace"]
+
+def _vary_form(form):
+    """Variante di case/punteggiatura di una forma societaria.
+    Da 'S.r.l.' puo' produrre 'S.r.l.' / 'SRL' / 'srl' / 'Srl' / 'S.R.L.' ...
+    cosi' il modello impara la forma in TUTTE le grafie (minuscole, maiuscole, senza punti)."""
+    r = random.random()
+    if r < 0.45:
+        return form                       # canonica
+    if r < 0.60:
+        return form.upper()               # S.R.L. / LTD
+    if r < 0.72:
+        return form.lower()               # s.r.l. / ltd
+    nodots = form.replace(".", "")
+    if r < 0.84:
+        return nodots                     # Srl / Ltd
+    if r < 0.92:
+        return nodots.upper()             # SRL / LTD
+    return nodots.lower()                 # srl / ltd
 
 def _acronym():
     return "".join(random.choice("ABCDEFGHILMNOPRSTUVZ") for _ in range(random.randint(2, 4)))
 
 def org_piece():
     """Nome di societa'/studio/banca/ente: tutta la stringa e' una sola entita' ORG.
-    Tante forme diverse (suffissi legali, brand nudi, acronimi, gruppi, cooperative,
-    sigle estere, ditte familiari) per non far imparare al modello solo 'X S.r.l.'."""
+    Copre ORG ITALIANE e INTERNAZIONALI in molte forme (suffissi legali IT ed esteri
+    SL/Ltd/LLC/GmbH/BV/Oy/Sp.zo.o./..., in tutte le grafie maiuscole/minuscole/senza
+    punti via _vary_form), piu' brand nudi, acronimi, gruppi, cooperative, ditte
+    familiari -> niente overfit su 'X S.r.l.'."""
     r = random.random()
-    if r < 0.20:
-        name = f"{random.choice(COMPANY_STEMS)} {random.choice(LEGAL_FORMS)}"
-    elif r < 0.32:
+    if r < 0.16:
+        name = f"{random.choice(COMPANY_STEMS)} {_vary_form(random.choice(IT_LEGAL_FORMS))}"
+    elif r < 0.28:
+        # ragione sociale INTERNAZIONALE con forma estera
+        stem = random.choice(INTL_STEMS)
+        tail = random.choice(INTL_TAILS)
+        body = random.choice([f"{stem} {tail}", f"{stem}{tail}", stem,
+                              f"{random.choice(BRAND_WORDS)} {tail}"])
+        name = f"{body} {_vary_form(random.choice(INTL_LEGAL_FORMS))}"
+    elif r < 0.37:
         name = f"Studio Legale {random.choice(SURNAMES)}" + random.choice(["", " & Associati", " e Associati"])
-    elif r < 0.40:
-        name = f"Banca {random.choice(COMPANY_STEMS)} S.p.A."
-    elif r < 0.52:
-        name = random.choice(BRAND_WORDS) + random.choice(["", "", " Italia", " Group", f" {random.choice(LEGAL_FORMS)}"])
-    elif r < 0.60:
-        name = f"Gruppo {random.choice(COMPANY_STEMS + BRAND_WORDS)}"
-    elif r < 0.68:
-        name = f"{random.choice(ORG_KINDS)} {random.choice(COMPANY_STEMS)}"
-    elif r < 0.76:
-        name = _acronym() + random.choice(["", "", f" {random.choice(LEGAL_FORMS)}", " S.p.A."])
-    elif r < 0.85:
+    elif r < 0.45:
+        name = f"Banca {random.choice(COMPANY_STEMS)} {_vary_form(random.choice(['S.p.A.', 'S.A.', 'AG', 'PLC']))}"
+    elif r < 0.57:
+        name = random.choice(BRAND_WORDS) + random.choice(
+            ["", "", " Italia", " Group", " International",
+             f" {_vary_form(random.choice(ALL_LEGAL_FORMS))}"])
+    elif r < 0.65:
+        name = f"{random.choice(ORG_KINDS)} {random.choice(COMPANY_STEMS + INTL_STEMS)}"
+    elif r < 0.73:
+        name = _acronym() + random.choice(
+            ["", "", f" {_vary_form(random.choice(ALL_LEGAL_FORMS))}"])
+    elif r < 0.83:
         s = random.choice(SURNAMES)
         name = random.choice([f"F.lli {s}", f"{s} & Figli", f"{s} & C.",
-                              f"{s} {random.choice(SURNAMES)} {random.choice(LEGAL_FORMS)}"])
+                              f"{s} {random.choice(SURNAMES)} {_vary_form(random.choice(ALL_LEGAL_FORMS))}"])
     elif r < 0.93:
-        name = f"{random.choice(COMPANY_STEMS)} {random.choice(FOREIGN_FORMS)}"
+        name = f"{random.choice(COMPANY_STEMS + INTL_STEMS)} {_vary_form(random.choice(INTL_LEGAL_FORMS))}"
     else:
         name = random.choice(BRAND_WORDS)   # brand nudo, nessun suffisso legale
     return [(name, "ORG")]

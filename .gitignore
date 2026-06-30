@@ -15,6 +15,7 @@ dataset/synthetic/
 dataset/processed/
 dataset/validation/
 dataset/subsets/
+dataset/contributions/
 
 # ─── Desktop app build — PyInstaller ───
 build/

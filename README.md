@@ -444,6 +444,46 @@ lawyers, accountants, notaries, developers, researchers — help build it: contr
 annotation, edge cases, and review. **A privacy tool for Italy is something Italy should build
 together, for the good of everyone's privacy.**
 
+### Contribute data in one shot — paste this to your coding agent
+
+The script [`src/data_pipeline/contribute_dataset.py`](src/data_pipeline/contribute_dataset.py)
+generates **genuinely new** synthetic examples — Gemini writes fresh legal prose on every run,
+the code injects valid values (CF/PIVA/IBAN checksums) and exact BIO labels — then opens a
+**Pull Request** on the dataset for a maintainer to review. You can let your coding agent
+(Claude Code, Cursor, …) do everything: get a [Gemini API key](https://aistudio.google.com/apikey)
+and a [Hugging Face token](https://huggingface.co/settings/tokens), then **copy-paste the prompt
+below** (fill in the two keys and your handle):
+
+```text
+Sei nel repository rizzo-pii. Voglio CONTRIBUIRE dati sintetici NUOVI al dataset Hugging Face
+"rizzoaiacademy/anonimizzazione-testi-italiano" eseguendo src/data_pipeline/contribute_dataset.py.
+
+I dati DEVONO essere generati davvero da zero: lo script usa Gemini per scrivere NUOVI template
+legali ad ogni run (non riusare dati esistenti). Prima di partire LEGGI docs/FORMATO_DATI.md per
+capire il formato esatto di ogni esempio (JSONL: source_text, tokens, bio_labels, entities, schema
+BIO, checksum CF/PIVA/IBAN obbligatori, nessuna PII reale).
+
+Fai tutto questo, in ordine:
+1. Crea/attiva un venv e installa il minimo necessario:  pip install huggingface_hub
+   (lo script per i dati NON richiede torch).
+2. Imposta le credenziali (NON committarle):
+     export GEMINI_API_KEY="<LA_MIA_CHIAVE_GEMINI>"
+     export HF_TOKEN="<IL_MIO_TOKEN_HF>"          # in alternativa: hf auth login
+3. Fai una prova locale SENZA caricare, controlla la distribuzione dei tag in output:
+     python src/data_pipeline/contribute_dataset.py --n 300 --handle <IL_MIO_HANDLE> --no-upload
+4. Genera il batch vero e APRI LA PR, rinforzando i tag più deboli (ORG e gli identificativi):
+     python src/data_pipeline/contribute_dataset.py --n 5000 --handle <IL_MIO_HANDLE> \
+       --per-type 3 --boost ORG=6 IBAN=4 CF=4 CATASTO=3 DOCID=3
+5. Stampami l'URL della Pull Request creata.
+
+Vincoli: SOLO dati sintetici (mai PII reali). Se Gemini non è disponibile, fermati e segnalamelo
+(non usare --offline senza il mio ok, perché produce dati meno nuovi).
+```
+
+> Prefer to do it yourself? Run the same commands manually — see
+> [CONTRIBUTING.md](CONTRIBUTING.md) and the format spec in
+> [docs/FORMATO_DATI.md](docs/FORMATO_DATI.md).
+
 ---
 
 ## Documentation
@@ -453,6 +493,7 @@ together, for the good of everyone's privacy.**
 | [CLAUDE.md](CLAUDE.md) | Environment constraints, repo map, architectural decisions, commands |
 | [docs/DATASET.md](docs/DATASET.md) | Full composition of train (~745k) and validation (7k) |
 | [docs/TASSONOMIA_TAG.md](docs/TASSONOMIA_TAG.md) | The 22 final tags and the merges (`TAG_MAP`) |
+| [docs/FORMATO_DATI.md](docs/FORMATO_DATI.md) | Exact dataset row format for contributing data (JSONL/BIO/checksums) |
 | [docs/BUILD.md](docs/BUILD.md) | Desktop executable build (CPU, Windows) |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log for the pipeline, with rationale |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute code, docs and (above all) data |

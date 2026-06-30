@@ -13,7 +13,23 @@ Contributions of code, documentation and (above all) data are all welcome.
 - **🔀 Code / docs.** Fork, branch, and open a pull request (see workflow below).
 - **📚 Data.** The community dataset lives on Hugging Face:
   **[`rizzoaiacademy/anonimizzazione-testi-italiano`](https://huggingface.co/datasets/rizzoaiacademy/anonimizzazione-testi-italiano)**.
-  Contribute templates, annotations, edge cases, or review — see its dataset card.
+  The quickest way to help is the contribution script, which uses **your own Gemini key** to
+  write **brand-new** legal prose every run, injects valid values (CF/PIVA/IBAN checksums) with
+  exact BIO labels, and opens a **Pull Request** for review:
+
+  ```bash
+  pip install huggingface_hub                                     # the data script needs no torch
+  export GEMINI_API_KEY=...      # https://aistudio.google.com/apikey   (PowerShell: $env:GEMINI_API_KEY=...)
+  hf auth login                  # or: export HF_TOKEN=hf_xxx
+  # dry run (no upload), then the real batch boosting the weak tags:
+  python src/data_pipeline/contribute_dataset.py --n 300  --handle yourname --no-upload
+  python src/data_pipeline/contribute_dataset.py --n 5000 --handle yourname --per-type 3 \
+      --boost ORG=6 IBAN=4 CF=4 CATASTO=3 DOCID=3
+  ```
+
+  The **exact row format** (JSONL, BIO scheme, offsets, required checksums) is documented in
+  [docs/FORMATO_DATI.md](docs/FORMATO_DATI.md) — read it if you want to produce examples by
+  hand. The README also has a ready-to-paste prompt for a coding agent.
 
 > ⚠️ **Never contribute real personal data.** This project exists to protect PII. Examples in
 > issues, PRs and the dataset must be synthetic or fully anonymized. The whole synthetic pipeline
