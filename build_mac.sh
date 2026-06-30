@@ -75,6 +75,14 @@ fi
 # ---- 2b) percorso NOTARIZE -------------------------------------------------
 ID="$APPLE_SIGNING_IDENTITY"
 sign() { codesign --force --options runtime --timestamp --sign "$ID" "$@"; }
+# Notarizza un file e ritorna lo stato (Accepted/Invalid/...) via JSON.
+# NB: NON grezzare l'output di --wait con grep: usa le barre di avanzamento con
+# ritorni-carrello e l'ultima riga puo' non finire nel file -> falso negativo.
+notarize_status() {
+  xcrun notarytool submit "$1" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
+    --team-id "$APPLE_TEAM_ID" --wait --output-format json 2>/dev/null \
+    | python3 -c 'import sys,json;print(json.load(sys.stdin).get("status","?"))'
+}
 
 echo ">>> [1/8] tauri build (firma Developer ID, SENZA notarize di Tauri)"
 ( cd "$ROOT/tauri" && env -u APPLE_ID -u APPLE_PASSWORD -u APPLE_API_KEY -u APPLE_API_ISSUER \
@@ -102,9 +110,8 @@ codesign --verify --deep --strict "$APP" || { echo "ERRORE: verify app fallita";
 echo ">>> [5/8] notarizzo la .app (attendo Apple)"
 ZIP="$ROOT/build/RizzoPII_app.zip"; mkdir -p "$ROOT/build"; rm -f "$ZIP"
 /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
-xcrun notarytool submit "$ZIP" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
-  --team-id "$APPLE_TEAM_ID" --wait | tee "$ROOT/build/notarize_app.out"
-grep -q "status: Accepted" "$ROOT/build/notarize_app.out" || { echo "ERRORE: notarizzazione .app non Accepted"; exit 1; }
+ST=$(notarize_status "$ZIP"); echo "    .app notarization: $ST"
+[ "$ST" = "Accepted" ] || { echo "ERRORE: notarizzazione .app = $ST"; exit 1; }
 
 echo ">>> [6/8] staple .app"
 xcrun stapler staple "$APP"
@@ -117,9 +124,8 @@ hdiutil create -volname "Rizzo PII" -srcfolder "$DMGROOT" -fs HFS+ -format UDZO 
 
 echo ">>> [8/8] firmo + notarizzo + staple il .dmg"
 codesign --force --timestamp --sign "$ID" "$DMG_OUT" >/dev/null 2>&1
-xcrun notarytool submit "$DMG_OUT" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
-  --team-id "$APPLE_TEAM_ID" --wait | tee "$ROOT/build/notarize_dmg.out"
-grep -q "status: Accepted" "$ROOT/build/notarize_dmg.out" || { echo "ERRORE: notarizzazione .dmg non Accepted"; exit 1; }
+ST=$(notarize_status "$DMG_OUT"); echo "    .dmg notarization: $ST"
+[ "$ST" = "Accepted" ] || { echo "ERRORE: notarizzazione .dmg = $ST"; exit 1; }
 xcrun stapler staple "$DMG_OUT"
 
 echo
