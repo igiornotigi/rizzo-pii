@@ -5,6 +5,16 @@ Le voci più recenti in alto. (Codice: `src/training/train_pii.py` salvo diverso
 
 ---
 
+## 2026-06-30 — Porta del backend 5000 → 5005 (conflitto AirPlay su macOS)
+
+Gli utenti macOS vedevano una **pagina bianca**: la porta **5000** è occupata di default
+dall'**AirPlay Receiver** (ControlCenter), quindi il WebView Tauri si collegava al servizio
+sbagliato. Backend spostato su **5005** (`app.py`, `serve.py`, `desktop_app.py` con default
+`PII_PORT=5005`; `lib.rs` `ADDR`/`URL` aggiornati). Override sempre possibile con la env
+`PII_PORT`. Nessun impatto sul training. Richiede rebuild/ri-notarizzazione del bundle macOS.
+
+---
+
 ## 2026-06-28 — App di anonimizzazione: revisione completa + app desktop Tauri
 
 Riscrittura dell'app locale (`src/app/`) e nuovo packaging desktop. Nessun impatto su training.

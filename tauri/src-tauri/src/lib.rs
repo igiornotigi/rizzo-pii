@@ -4,7 +4,8 @@
 // PyInstaller e incluso come risorsa ("backend/pii-backend/pii-backend.exe"). Tauri fa da
 // finestra nativa: all'avvio mostra uno splash, lancia il backend come processo figlio,
 // attende che il server locale risponda e poi apre la finestra principale puntata sull'UI
-// Flask (http://127.0.0.1:5000). Alla chiusura il processo figlio viene terminato.
+// Flask (http://127.0.0.1:5005). Alla chiusura il processo figlio viene terminato.
+// NB: porta 5005 e non 5000 perche' su macOS la 5000 e' occupata da AirPlay Receiver.
 
 use std::net::TcpStream;
 use std::process::{Child, Command};
@@ -16,8 +17,8 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 /// Custodisce il processo del backend per poterlo terminare all'uscita.
 struct BackendProcess(Mutex<Option<Child>>);
 
-const ADDR: &str = "127.0.0.1:5000";
-const URL: &str = "http://127.0.0.1:5000";
+const ADDR: &str = "127.0.0.1:5005";
+const URL: &str = "http://127.0.0.1:5005";
 
 /// True se il server locale accetta connessioni (= modello caricato, Flask in ascolto).
 fn backend_ready() -> bool {

@@ -5,11 +5,13 @@ apre il browser. Chiudere questa finestra termina l'applicazione.
 """
 
 import multiprocessing
+import os
 import threading
 import time
 import webbrowser
 
-PORT = 5000
+# 5005: la 5000 su macOS e' occupata da AirPlay Receiver. Override con env PII_PORT.
+PORT = int(os.environ.get("PII_PORT", "5005"))
 URL = f"http://127.0.0.1:{PORT}/"
 
 
