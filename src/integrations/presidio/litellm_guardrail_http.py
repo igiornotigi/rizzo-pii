@@ -23,6 +23,8 @@ NB (onesto):
  - Multi-turno: il mapping e' per-richiesta; per una chat coerente serve stato
    per-conversazione (stessa entita' -> stesso placeholder tra i turni).
 """
+import sys
+
 import httpx
 
 try:
@@ -34,12 +36,21 @@ except Exception:                       # import possibile anche senza litellm
 _MAP_KEY = "rizzo_pii_map"
 
 
+def _log(msg: str) -> None:
+    print(f"[rizzo-guardrail] {msg}", file=sys.stderr, flush=True)
+
+
+# segnale di avvenuto IMPORT del modulo (compare nei log all'avvio se LiteLLM lo carica)
+_log("modulo importato")
+
+
 class RizzoPiiHttpGuardrail(CustomGuardrail):
     def __init__(self, service_url="http://host.docker.internal:5005/analyze",
                  timeout=60, **kwargs):
         super().__init__(**kwargs)
         self._url = service_url
         self._timeout = timeout
+        _log(f"init OK (service_url={service_url}, kwargs={list(kwargs.keys())})")
 
     async def _anon(self, text: str):
         async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -57,6 +68,7 @@ class RizzoPiiHttpGuardrail(CustomGuardrail):
     # --- LiteLLM hooks -----------------------------------------------------
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         """Anonimizza ogni messaggio PRIMA di uscire verso l'LLM."""
+        _log(f"pre_call: {len(data.get('messages', []))} messaggi")
         merged = {}
         for msg in data.get("messages", []):
             c = msg.get("content")
@@ -65,11 +77,13 @@ class RizzoPiiHttpGuardrail(CustomGuardrail):
                 msg["content"] = anon
                 merged.update(mp)
         data.setdefault("metadata", {})[_MAP_KEY] = merged
+        _log(f"pre_call: mascherate {len(merged)} entita'")
         return data
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
         """Ricostruisce i valori veri nella risposta."""
         mapping = (data or {}).get("metadata", {}).get(_MAP_KEY) or {}
+        _log(f"post_call: mapping da ricostruire = {len(mapping)}")
         if not mapping:
             return response
         try:
