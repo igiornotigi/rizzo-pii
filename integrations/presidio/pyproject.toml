@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rizzo-presidio"
+version = "0.1.0"
+description = "Italian legal PII recognizers for Microsoft Presidio: rizzo-pii-0.3B (mmBERT) contextual NER + checksum-validated regex (CF, P.IVA, IBAN, ...)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Rizzo AI Academy contributors" }]
+keywords = ["pii", "presidio", "anonymization", "gdpr", "italian", "legal", "ner"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Text Processing :: Linguistic",
+]
+# base leggera: SOLO i recognizer regex+checksum (niente torch)
+dependencies = [
+    "presidio-analyzer>=2.2.355",
+]
+
+[project.optional-dependencies]
+# il recognizer col modello mmBERT
+model = [
+    "transformers>=4.44",
+    "torch>=2.2",
+    "huggingface-hub>=0.23",
+]
+# il server HTTP compatibile Presidio Analyzer
+server = [
+    "flask>=3.0",
+    "gunicorn>=21 ; sys_platform != 'win32'",
+]
+test = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/Rizzo-AI-Academy/rizzo-pii"
+
+[tool.setuptools]
+packages = ["rizzo_presidio"]

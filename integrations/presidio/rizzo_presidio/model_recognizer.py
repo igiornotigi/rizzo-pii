@@ -9,12 +9,12 @@ dell'app e converte le entita' del modello in `RecognizerResult` Presidio, mappa
 
 Il modello copre i tag CONTESTUALI (nomi, org, indirizzi, date in prosa): la sua forza
 sono i PII che nessuna regex prende. Va affiancato ai recognizer regex+checksum
-(it_legal_recognizers.py) per i PII strutturati -> modello + rete = recall alto.
+(checksum_recognizers.py) per i PII strutturati -> modello + rete = recall alto.
 
-Dipendenze: presidio-analyzer, transformers, torch.
+Dipendenze: presidio-analyzer + extra [model] (transformers, torch).
 """
 import re
-from typing import List, Optional
+from typing import List
 
 from presidio_analyzer import EntityRecognizer, RecognizerResult
 

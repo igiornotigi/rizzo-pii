@@ -1,0 +1,30 @@
+# Stack di anonimizzazione Presidio-compatibile con il modello rizzo-pii.
+#
+#   rizzo-analyzer      : rilevamento (modello mmBERT + regex/checksum IT) - porta 5002
+#   presidio-anonymizer : sostituzione (immagine Microsoft ufficiale)      - porta 5001
+#
+# Avvio:   docker compose -f docker/docker-compose.yml up -d --build
+# LiteLLM: presidio_analyzer_api_base=http://<host>:5002
+#          presidio_anonymizer_api_base=http://<host>:5001
+
+services:
+  rizzo-analyzer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: rizzo-pii-analyzer:0.1.0
+    ports:
+      - "5002:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s   # primo avvio: carica il modello
+
+  presidio-anonymizer:
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+    ports:
+      - "5001:3000"
+    restart: unless-stopped

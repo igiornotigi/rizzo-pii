@@ -5,10 +5,10 @@ fornisce l'anonimizzazione REVERSIBILE (placeholder <-> valore) per usarlo come
 guardrail (LiteLLM / Open WebUI).
 
 Due modalita':
-  1) build_recognizers()  -> lista di recognizer, usabili "a mano" (PoC leggero,
-     solo presidio-analyzer + transformers). Vedi analyze()/reversible_anonymize().
-  2) build_analyzer_engine() -> AnalyzerEngine completo (per il guardrail Presidio
-     di LiteLLM). Richiede un nlp_engine spaCy 'it' per il context-enhancement.
+  1) build_recognizers()  -> lista di recognizer, usabili "a mano" (leggero, senza
+     spaCy). E' quello che usa analyzer_app.py. Vedi analyze()/reversible_anonymize().
+  2) build_analyzer_engine() -> AnalyzerEngine completo (se serve l'oggetto Presidio
+     canonico, es. per l'SDK). Richiede un nlp_engine spaCy 'it'.
 
 La reversibilita' ricalca src/app/app.py: stesso (entita', valore-normalizzato) ->
 stesso placeholder [ENTITY_N]; il dizionario {placeholder->valore} resta LOCALE.
@@ -18,12 +18,12 @@ from typing import Dict, List, Tuple
 
 from presidio_analyzer import RecognizerResult
 
-from .rizzo_recognizer import RizzoPiiRecognizer
-from .it_legal_recognizers import build_it_recognizers
+from .model_recognizer import RizzoPiiRecognizer
+from .checksum_recognizers import build_it_recognizers
 
 
 # --------------------------------------------------------------------------- #
-# 1) PoC leggero: recognizer diretti + merge + anonimizzazione reversibile
+# 1) Recognizer diretti + merge + anonimizzazione reversibile
 # --------------------------------------------------------------------------- #
 def build_recognizers(model_dir: str):
     rizzo = RizzoPiiRecognizer(model_dir)
@@ -31,9 +31,35 @@ def build_recognizers(model_dir: str):
     return [rizzo] + build_it_recognizers()
 
 
+def _is_regex(res: RecognizerResult) -> int:
+    # la rete regex/checksum e' piu' affidabile del modello sui PII a forma fissa
+    # (CF/IBAN/carta) -> ha priorita' su score, come in app.py (evita la frammentazione).
+    return (res.recognition_metadata or {}).get("rizzo_is_regex", 0)
+
+
+def _validated(res: RecognizerResult) -> int:
+    # "validato" = checksum passato: SOLO un match regex puo' esserlo (Presidio porta
+    # lo score al max quando validate_result=True). Il modello, anche a score 1.0, NON
+    # e' "validato" -> non deve battere il full-span della regex e frammentarlo.
+    return 1 if (_is_regex(res) and res.score >= 0.999) else 0
+
+
+def merge(cands: List[RecognizerResult]) -> List[RecognizerResult]:
+    """Fonde i risultati senza sovrapposizioni.
+    Priorita' (come nell'app): validato-da-checksum > regex > score > lunghezza."""
+    order = sorted(cands,
+                   key=lambda r: (_validated(r), _is_regex(r), r.score, r.end - r.start),
+                   reverse=True)
+    kept: List[RecognizerResult] = []
+    for r in order:
+        if all(r.end <= k.start or r.start >= k.end for k in kept):
+            kept.append(r)
+    kept.sort(key=lambda r: r.start)
+    return kept
+
+
 def analyze(text: str, recognizers) -> List[RecognizerResult]:
-    """Esegue tutti i recognizer e fonde i risultati senza sovrapposizioni.
-    Priorita' (come nell'app): validato-da-checksum > score > lunghezza."""
+    """Esegue tutti i recognizer e fonde i risultati (merge senza sovrapposizioni)."""
     cands: List[RecognizerResult] = []
     for r in recognizers:
         # NB: i PatternRecognizer con entities=None non restituiscono nulla ->
@@ -46,27 +72,7 @@ def analyze(text: str, recognizers) -> List[RecognizerResult]:
             meta["rizzo_is_regex"] = regex_src
             res.recognition_metadata = meta
             cands.append(res)
-
-    def is_regex(res) -> int:
-        # la rete regex/checksum e' piu' affidabile del modello sui PII a forma fissa
-        # (CF/IBAN/carta) -> ha priorita' su score, come in app.py (evita la frammentazione).
-        return (res.recognition_metadata or {}).get("rizzo_is_regex", 0)
-
-    def validated(res) -> int:
-        # "validato" = checksum passato: SOLO un match regex puo' esserlo (Presidio porta
-        # lo score al max quando validate_result=True). Il modello, anche a score 1.0, NON
-        # e' "validato" -> non deve battere il full-span della regex e frammentarlo.
-        return 1 if (is_regex(res) and res.score >= 0.999) else 0
-
-    order = sorted(cands,
-                   key=lambda r: (validated(r), is_regex(r), r.score, r.end - r.start),
-                   reverse=True)
-    kept: List[RecognizerResult] = []
-    for r in order:
-        if all(r.end <= k.start or r.start >= k.end for k in kept):
-            kept.append(r)
-    kept.sort(key=lambda r: r.start)
-    return kept
+    return merge(cands)
 
 
 def _norm(s: str) -> str:
@@ -112,7 +118,7 @@ def deanonymize(anon_text: str, mapping: Dict[str, str]) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# 2) AnalyzerEngine completo (per il guardrail Presidio di LiteLLM)
+# 2) AnalyzerEngine completo (oggetto Presidio canonico, opzionale)
 # --------------------------------------------------------------------------- #
 def build_analyzer_engine(model_dir: str):
     """AnalyzerEngine con i recognizer rizzo-pii. NB: serve un nlp_engine spaCy 'it'
@@ -141,7 +147,7 @@ def build_analyzer_engine(model_dir: str):
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     import sys
-    model = sys.argv[1] if len(sys.argv) > 1 else "models/rizzo-pii-0.3B"
+    model = sys.argv[1] if len(sys.argv) > 1 else "rizzoaiacademy/rizzo-pii-0.3B"
     sample = ("Il sottoscritto Mario Rossi, C.F. RSSMRA85H12F205Z, residente in Via "
               "Garibaldi 24, Milano (MI), chiede il bonifico di € 12.500,00 sull'IBAN "
               "IT60X0542811101000000123456 intestato alla Edilnord S.r.l.")

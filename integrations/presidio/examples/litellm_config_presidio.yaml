@@ -1,0 +1,26 @@
+# Guardrail "presidio" NATIVO di LiteLLM che punta allo stack rizzo-pii
+# (docker/docker-compose.yml). E' la via CANONICA: appare nella UI admin di LiteLLM
+# (Guardrails -> Add Guardrail -> Presidio PII) e si puo' configurare da li' con gli
+# stessi parametri.
+#
+#   utente -> LiteLLM --/analyze--> rizzo-analyzer (modello+checksum)
+#                    --/anonymize--> presidio-anonymizer -> testo mascherato -> LLM
+#
+# output_parse_pii: true -> LiteLLM ri-sostituisce i valori originali nella risposta
+# (reversibilita' gestita da LiteLLM stesso, per-richiesta).
+
+guardrails:
+  - guardrail_name: "rizzo-pii-presidio"
+    litellm_params:
+      guardrail: presidio
+      mode: "pre_call"
+      default_on: true
+      presidio_analyzer_api_base: "http://<HOST>:5002"      # rizzo-analyzer
+      presidio_anonymizer_api_base: "http://<HOST>:5001"    # anonymizer MS ufficiale
+      presidio_language: "it"
+      output_parse_pii: true          # ripristina i valori veri nella risposta
+      # opzionale: limitare le entita' mascherate
+      # pii_entities_config:
+      #   PERSON: "MASK"
+      #   IT_FISCAL_CODE: "MASK"
+      #   IBAN_CODE: "MASK"
