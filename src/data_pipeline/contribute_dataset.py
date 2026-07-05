@@ -115,7 +115,7 @@ def cf_ok(c):
 REPO_ID = "rizzoaiacademy/anonimizzazione-testi-italiano"
 GENERATOR_VERSION = "1.0.0"   # versione del formato/generatore di questa contribuzione
 
-MAX_N = 200_000               # tetto ragionevole per una singola contribuzione
+MAX_N = 1_000_000             # tetto per una singola contribuzione (alzato: i contributori HF caricano file da 800k-1M)
 
 # label "grezze" emesse dai generatori -> tag "coarse" su cui ragiona il contributore
 # (rispecchia il TAG_MAP del training: ruoli/nome/cognome -> FULLNAME, ecc.)
