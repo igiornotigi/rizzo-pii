@@ -22,9 +22,12 @@ ENV PIP_NO_CACHE_DIR=1 \
 RUN pip install --index-url https://download.pytorch.org/whl/cpu torch
 
 # il pacchetto rizzo-presidio con gli extra modello+server
-COPY pyproject.toml README.md /opt/rizzo-presidio/
+COPY pyproject.toml README.md NOTICE /opt/rizzo-presidio/
 COPY rizzo_presidio/ /opt/rizzo-presidio/rizzo_presidio/
 RUN pip install "/opt/rizzo-presidio[model,server]"
+
+# attribuzione (MIT): il modello ridistribuito e' di Simone Rizzo / Rizzo AI Academy
+COPY NOTICE /NOTICE
 
 # scarica il modello DENTRO l'immagine (unica fase che tocca la rete)
 ARG MODEL_ID=rizzoaiacademy/rizzo-pii-0.3B

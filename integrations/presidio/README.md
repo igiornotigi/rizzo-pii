@@ -115,5 +115,6 @@ l'endpoint extra `/reversible` dello stesso container.
   stato per-conversazione (stessa entità → stesso placeholder tra i turni).
 - **Tassonomia**: i tag `IT_*` sono entità custom (i client che filtrano per entità
   devono includerle; `GET /supportedentities` le elenca).
-- L'immagine ridistribuisce i pesi di `rizzoaiacademy/rizzo-pii-0.3B` (licenza del
-  modello a monte).
+- L'immagine ridistribuisce i pesi di `rizzoaiacademy/rizzo-pii-0.3B` (© Simone Rizzo
+  / Rizzo AI Academy, **MIT** — ridistribuzione consentita mantenendo l'attribuzione;
+  vedi [`NOTICE`](NOTICE)). Modello e dataset a monte sono entrambi MIT.

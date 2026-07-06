@@ -1,0 +1,28 @@
+rizzo-presidio — Italian legal PII recognizers for Microsoft Presidio
+=====================================================================
+
+This package and the Docker image built from it are licensed under the MIT
+License (see the root LICENSE file of the rizzo-pii repository).
+
+The Docker image `rizzo-pii-analyzer` bundles the pre-trained model weights of:
+
+    rizzoaiacademy/rizzo-pii-0.3B
+    Copyright (c) 2026 Simone Rizzo — Rizzo AI Academy
+    Licensed under the MIT License
+    https://huggingface.co/rizzoaiacademy/rizzo-pii-0.3B
+
+The model was trained (in part) on the dataset:
+
+    rizzoaiacademy/anonimizzazione-testi-italiano
+    Copyright (c) 2026 Simone Rizzo — Rizzo AI Academy
+    Licensed under the MIT License
+    https://huggingface.co/datasets/rizzoaiacademy/anonimizzazione-testi-italiano
+
+Both the model weights and the dataset are redistributed under the terms of the
+MIT License, which permits redistribution provided the copyright notice and
+this permission notice are retained.
+
+Third-party components (each under its own license, not modified here):
+  - Microsoft Presidio (presidio-analyzer, presidio-anonymizer) — MIT License
+  - Hugging Face Transformers — Apache License 2.0
+  - PyTorch — BSD-3-Clause
