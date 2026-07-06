@@ -1,13 +1,17 @@
 # Guardrail "presidio" NATIVO di LiteLLM che punta allo stack rizzo-pii
-# (docker/docker-compose.yml). E' la via CANONICA: appare nella UI admin di LiteLLM
-# (Guardrails -> Add Guardrail -> Presidio PII) e si puo' configurare da li' con gli
-# stessi parametri.
+# (docker/docker-compose.yml): rizzo-analyzer su :5002, presidio-anonymizer su :5001.
 #
-#   utente -> LiteLLM --/analyze--> rizzo-analyzer (modello+checksum)
+#   utente -> LiteLLM --/analyze--> rizzo-analyzer (modello mmBERT + regex/checksum IT)
 #                    --/anonymize--> presidio-anonymizer -> testo mascherato -> LLM
+#                    <-- output_parse_pii ricostruisce i valori veri nella risposta
 #
-# output_parse_pii: true -> LiteLLM ri-sostituisce i valori originali nella risposta
-# (reversibilita' gestita da LiteLLM stesso, per-richiesta).
+# DUE MODI per registrare il guardrail, stesso risultato:
+#   1) da questo config.yaml  -> source "config": dichiarativo, versionabile in git,
+#      READ-ONLY nella UI (non sovrascrivibile per sbaglio). Cambiarlo = edit file + restart.
+#   2) dalla UI admin (Guardrails -> + Add -> Presidio PII) -> source "db": comodo,
+#      ritoccabile a caldo via UI/API senza restart.
+# In ENTRAMBI i casi il guardrail compare nel Guardrails Monitor / log della UI.
+# Un guardrail vive in UNA sola sorgente: o qui, o nel DB. Non si spezza a metà.
 
 guardrails:
   - guardrail_name: "rizzo-pii-presidio"
@@ -18,8 +22,34 @@ guardrails:
       presidio_analyzer_api_base: "http://<HOST>:5002"      # rizzo-analyzer
       presidio_anonymizer_api_base: "http://<HOST>:5001"    # anonymizer MS ufficiale
       presidio_language: "it"
-      output_parse_pii: true          # ripristina i valori veri nella risposta
-      # opzionale: limitare le entita' mascherate
+      presidio_filter_scope: "input"    # maschera l'input verso l'LLM (non l'output)
+      output_parse_pii: true            # ripristina i valori veri nella risposta (reversibile)
+
+      # Soglie di confidenza PER-ENTITA' (minimo score per accettare una detection).
+      # PERCHE': il modello a volte emette detection contestuali a confidenza bassissima
+      # (~0.40, testa-o-croce) che diventano falsi positivi -> es. "rizzo-pii" scambiato
+      # per una citta' e mascherato. Le detection VERE stanno a ~0.99, quindi 0.6 taglia
+      # il rumore senza perdere quelle buone. Si applicano SOLO alle entita' contestuali
+      # del modello: il layer regex/checksum (CF/IBAN/carta=1.0, telefono/targa) NON e'
+      # toccato e resta sempre attivo.
+      #
+      # GOTCHA: questo campo la UI admin di LiteLLM NON lo espone nel form presidio
+      # (rende solo 6 campi). Va messo qui nel config, oppure via API di management
+      # (PUT /guardrails/{id}). Se il guardrail e' nel DB, la UI lo PRESERVA al salvataggio
+      # anche se non lo mostra -> nessuna perdita, ma per impostarlo/modificarlo serve
+      # config o API. Verificato su LiteLLM v1.88.1.
+      presidio_score_thresholds:
+        LOCATION: 0.6
+        PERSON: 0.6
+        ORGANIZATION: 0.6
+        DATE_TIME: 0.6
+        AGE: 0.6
+
+      # NON impostare pii_entities_config se vuoi le entita' custom italiane.
+      # GOTCHA: se lo popoli, LiteLLM invia "entities" all'analyzer e restringe la
+      # detection SOLO a quei tipi -> le entita' custom IT_* che non sono nella lista
+      # built-in di LiteLLM (IT_CADASTRAL, IT_DOC_ID, IT_PROVINCE, IT_AMOUNT, ...)
+      # verrebbero escluse. Lasciandolo vuoto passano tutte.
       # pii_entities_config:
       #   PERSON: "MASK"
       #   IT_FISCAL_CODE: "MASK"

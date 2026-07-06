@@ -86,6 +86,19 @@ guardrails:
       output_parse_pii: true      # ripristina i valori veri nella risposta
 ```
 
+Due accortezze importanti (config completa e commentata in
+[examples/litellm_config_presidio.yaml](examples/litellm_config_presidio.yaml)):
+
+- **Soglie di confidenza** — imposta `presidio_score_thresholds` (per-entità, es. tutte
+  a `0.6`) sulle entità contestuali del modello (PERSON, LOCATION, ORGANIZATION,
+  DATE_TIME, AGE): senza soglia, le detection a bassa confidenza (~0.4) diventano falsi
+  positivi (es. "rizzo-pii" scambiato per una città). Il layer regex/checksum non è
+  toccato. **La UI admin non espone questo campo** — va messo via config o API
+  (`PUT /guardrails/{id}`); se il guardrail è nel DB la UI lo preserva ma non lo mostra.
+- **Non impostare `pii_entities_config`** se vuoi le entità custom `IT_*`: popolarlo
+  restringe la detection ai soli tipi elencati, escludendo quelle non-standard
+  (IT_CADASTRAL, IT_DOC_ID, IT_PROVINCE…). Lascialo vuoto → passano tutte.
+
 In alternativa, per il controllo totale del round-trip (placeholder numerati
 `[PERSON_1]`, dizionario locale), c'è il guardrail custom
 [examples/litellm_guardrail_http.py](examples/litellm_guardrail_http.py) che usa
