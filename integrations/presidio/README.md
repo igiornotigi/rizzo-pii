@@ -72,7 +72,7 @@ curl -X POST http://localhost:5002/analyze -H 'Content-Type: application/json' \
 
 Il guardrail **`presidio` nativo** di LiteLLM funziona senza codice aggiuntivo:
 UI admin → *Guardrails → Add Guardrail → Presidio PII*, oppure config
-([examples/litellm_config_presidio.yaml](examples/litellm_config_presidio.yaml)):
+([examples/litellm-config.example.yaml](examples/litellm-config.example.yaml)):
 
 ```yaml
 guardrails:
@@ -87,7 +87,7 @@ guardrails:
 ```
 
 Due accortezze importanti (config completa e commentata in
-[examples/litellm_config_presidio.yaml](examples/litellm_config_presidio.yaml)):
+[examples/litellm-config.example.yaml](examples/litellm-config.example.yaml)):
 
 - **Soglie di confidenza** — imposta `presidio_score_thresholds` (per-entità, es. tutte
   a `0.6`) sulle entità contestuali del modello (PERSON, LOCATION, ORGANIZATION,

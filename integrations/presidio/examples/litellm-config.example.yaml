@@ -1,19 +1,34 @@
-# Guardrail "presidio" NATIVO di LiteLLM che punta allo stack rizzo-pii
-# (docker/docker-compose.yml): rizzo-analyzer su :5002, presidio-anonymizer su :5001.
+# Config LiteLLM di ESEMPIO — minimo ma COMPLETO — che mostra il guardrail presidio
+# rizzo-pii nel contesto di un config reale. Copialo come `litellm-config.yaml`
+# (o `config.yaml`) e personalizzalo: sostituisci <HOST>, le chiavi (via env) e i modelli.
 #
-#   utente -> LiteLLM --/analyze--> rizzo-analyzer (modello mmBERT + regex/checksum IT)
-#                    --/anonymize--> presidio-anonymizer -> testo mascherato -> LLM
-#                    <-- output_parse_pii ricostruisce i valori veri nella risposta
+# Stack presidio richiesto (docker/docker-compose.yml):
+#   rizzo-analyzer :5002  (modello mmBERT + regex/checksum IT)
+#   presidio-anonymizer :5001  (immagine Microsoft ufficiale)
 #
-# DUE MODI per registrare il guardrail, stesso risultato:
-#   1) da questo config.yaml  -> source "config": dichiarativo, versionabile in git,
-#      READ-ONLY nella UI (non sovrascrivibile per sbaglio). Cambiarlo = edit file + restart.
-#   2) dalla UI admin (Guardrails -> + Add -> Presidio PII) -> source "db": comodo,
-#      ritoccabile a caldo via UI/API senza restart.
-# In ENTRAMBI i casi il guardrail compare nel Guardrails Monitor / log della UI.
-# Un guardrail vive in UNA sola sorgente: o qui, o nel DB. Non si spezza a metà.
+# Flusso:
+#   utente -> LiteLLM --/analyze--> rizzo-analyzer --/anonymize--> presidio-anonymizer
+#          -> testo mascherato -> LLM esterno -> output_parse_pii ricostruisce -> utente
+
+model_list:
+  - model_name: preciso
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: rapido
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY   # mai segreti in chiaro nel file
 
 guardrails:
+  # Registrarlo qui (source "config") = dichiarativo, versionabile in git, READ-ONLY nella
+  # UI (non sovrascrivibile per sbaglio). In alternativa dalla UI admin (source "db"):
+  # comodo, ritoccabile a caldo. Un guardrail vive in UNA sola sorgente, e in ENTRAMBI
+  # i casi compare nel Guardrails Monitor / log della UI.
   - guardrail_name: "rizzo-pii-presidio"
     litellm_params:
       guardrail: presidio
@@ -67,9 +82,8 @@ guardrails:
 # quello scegli se anonimizzare): metti default_on: false qui sopra, poi attacca il
 # guardrail ai singoli modelli nel model_list. LiteLLM legge
 # deployment.litellm_params["guardrails"] per il modello scelto e lo applica solo a
-# quello; i modelli senza quella riga NON mascherano.
+# quello; i modelli senza quella riga NON mascherano. Esempio:
 #
-# model_list:
 #   - model_name: preciso                     # <-- maschera
 #     litellm_params:
 #       model: anthropic/claude-sonnet-4-6
