@@ -54,3 +54,32 @@ guardrails:
       #   PERSON: "MASK"
       #   IT_FISCAL_CODE: "MASK"
       #   IBAN_CODE: "MASK"
+
+# ---------------------------------------------------------------------------
+# QUALI richieste passano dal guardrail: 4 livelli, si SOMMANO
+# ---------------------------------------------------------------------------
+# 1) GLOBALE   -> default_on: true (sopra). Gira su TUTTO il traffico del proxy.
+# 2) PER-RICHIESTA -> nel body: {"guardrails": ["rizzo-pii-presidio"], ...}. Dinamico.
+# 3) PER-MODELLO -> guardrails: [...] nei litellm_params del modello (vedi sotto).
+# 4) PER-KEY/TEAM -> guardrails: [...] sulla virtual key o sul team.
+#
+# Per attivarlo SOLO su alcuni modelli (es. in Open WebUI scegli il modello e con
+# quello scegli se anonimizzare): metti default_on: false qui sopra, poi attacca il
+# guardrail ai singoli modelli nel model_list. LiteLLM legge
+# deployment.litellm_params["guardrails"] per il modello scelto e lo applica solo a
+# quello; i modelli senza quella riga NON mascherano.
+#
+# model_list:
+#   - model_name: preciso                     # <-- maschera
+#     litellm_params:
+#       model: anthropic/claude-sonnet-4-6
+#       api_key: os.environ/ANTHROPIC_API_KEY
+#       guardrails: ["rizzo-pii-presidio"]     # <-- la riga chiave
+#   - model_name: rapido                       # <-- niente riga guardrails -> NON maschera
+#     litellm_params:
+#       model: openrouter/deepseek/deepseek-v4-flash
+#       api_key: os.environ/OPENROUTER_API_KEY
+#
+# NB: il modello "tasks" (Open WebUI lo usa per generare titoli/tag delle chat) manda
+# il contenuto della conversazione all'LLM -> se lo vuoi protetto, attacca il guardrail
+# anche a lui, altrimenti quei riassunti escono NON mascherati.
